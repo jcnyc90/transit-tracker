@@ -10,181 +10,73 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root {
-  --bg: #080808;
-  --surface: #121212;
-  --surface2: #1a1a1a;
-  --border: #242424;
-  --accent: #f0e14a;
-  --accent2: #3dffc0;
-  --accent3: #ff6b6b;
-  --text: #ede8df;
-  --muted: #555;
-  --muted2: #888;
-  --radius: 10px;
+  --bg: #080808; --surface: #121212; --surface2: #1a1a1a;
+  --border: #242424; --accent: #f0e14a; --accent2: #3dffc0;
+  --accent3: #ff6b6b; --text: #ede8df; --muted: #555; --muted2: #888;
+  --green: #3dffc0; --red: #ff6b6b; --radius: 10px;
 }
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
-
-/* ── LAYOUT ── */
 .app { display:flex; flex-direction:column; height:100dvh; }
-
-/* ── HEADER ── */
-.header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:11px 16px 9px;
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;
-  background:var(--bg);
-}
-.wordmark {
-  font-family:'Space Mono',monospace;
-  font-size:15px; font-weight:700; letter-spacing:-0.5px;
-}
+.header { display:flex; align-items:center; justify-content:space-between; padding:11px 16px 9px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg); }
+.wordmark { font-family:'Space Mono',monospace; font-size:15px; font-weight:700; letter-spacing:-0.5px; }
 .wordmark em { color:var(--accent); font-style:normal; }
-.live-badge {
-  display:flex; align-items:center; gap:6px;
-  font-family:'Space Mono',monospace; font-size:10px; color:var(--muted2);
-}
+.live-badge { display:flex; align-items:center; gap:6px; font-family:'Space Mono',monospace; font-size:10px; color:var(--muted2); }
 .dot { width:6px; height:6px; border-radius:50%; background:var(--muted); flex-shrink:0; }
 .dot.live { background:var(--accent2); animation:blink 2s infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-/* ── LOCATION STRIP ── */
-.loc-strip {
-  display:flex; gap:6px; padding:9px 14px;
-  overflow-x:auto; scrollbar-width:none; flex-shrink:0;
-  border-bottom:1px solid var(--border);
-}
+.loc-strip { display:flex; gap:6px; padding:9px 14px; overflow-x:auto; scrollbar-width:none; flex-shrink:0; border-bottom:1px solid var(--border); }
 .loc-strip::-webkit-scrollbar { display:none; }
-.loc-chip {
-  padding:5px 13px; border-radius:20px; font-size:11px;
-  font-family:'Space Mono',monospace; white-space:nowrap;
-  border:1px solid var(--border); color:var(--muted2);
-  background:var(--surface); cursor:pointer; transition:all .15s;
-  flex-shrink:0;
-}
+.loc-chip { padding:5px 13px; border-radius:20px; font-size:11px; font-family:'Space Mono',monospace; white-space:nowrap; border:1px solid var(--border); color:var(--muted2); background:var(--surface); cursor:pointer; transition:all .15s; flex-shrink:0; }
 .loc-chip.active { background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
-.loc-chip:active { transform:scale(0.96); }
-
-/* ── PROGRESS BAR ── */
 .progress-bar { height:2px; background:var(--border); flex-shrink:0; position:relative; }
-.progress-fill {
-  position:absolute; left:0; top:0; bottom:0;
-  background:linear-gradient(90deg, var(--accent2), var(--accent));
-  transition:width 1s linear; border-radius:0 1px 1px 0;
-}
-
-/* ── TAB BAR ── */
-.tab-bar {
-  display:flex; border-bottom:1px solid var(--border);
-  flex-shrink:0; background:var(--bg);
-}
-.tab {
-  flex:1; padding:9px 4px; text-align:center;
-  font-size:11px; font-family:'Space Mono',monospace; letter-spacing:.3px;
-  color:var(--muted); cursor:pointer;
-  border-bottom:2px solid transparent; transition:all .2s;
-}
+.progress-fill { position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, var(--accent2), var(--accent)); transition:width 1s linear; border-radius:0 1px 1px 0; }
+.tab-bar { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg); }
+.tab { flex:1; padding:9px 4px; text-align:center; font-size:11px; font-family:'Space Mono',monospace; letter-spacing:.3px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
 .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-
-/* ── CONTENT AREA ── */
 .content { flex:1; overflow:hidden; position:relative; display:flex; flex-direction:column; }
-
-/* ── MAP VIEW ── */
 .map-view { flex:1; overflow:hidden; position:relative; display:flex; flex-direction:column; }
 #map { flex:1; }
-.leaflet-container { background:#0d0d0d; }
-.leaflet-tile { filter:brightness(.65) saturate(.4) contrast(1.1); }
-.leaflet-control-zoom a {
-  background:var(--surface2) !important; color:var(--text) !important;
-  border-color:var(--border) !important;
-}
-
-/* ── BOTTOM SHEET (on map) ── */
-.sheet {
-  position:absolute; bottom:0; left:0; right:0;
-  background:var(--surface); border-top:1px solid var(--border);
-  border-radius:14px 14px 0 0; z-index:50;
-  max-height:52%; overflow-y:auto; scrollbar-width:none;
-}
+.leaflet-container { background:#111; }
+.leaflet-tile { filter:brightness(.75) saturate(.5) contrast(1.05); }
+.leaflet-control-zoom a { background:var(--surface2) !important; color:var(--text) !important; border-color:var(--border) !important; }
+.sheet { position:absolute; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); border-radius:14px 14px 0 0; z-index:50; max-height:52%; overflow-y:auto; scrollbar-width:none; }
 .sheet::-webkit-scrollbar { display:none; }
-.sheet-handle {
-  width:32px; height:3px; background:var(--border);
-  border-radius:2px; margin:9px auto 0;
-}
-.sheet-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:8px 14px 10px;
-}
+.sheet-handle { width:32px; height:3px; background:var(--border); border-radius:2px; margin:9px auto 0; }
+.sheet-header { display:flex; align-items:center; justify-content:space-between; padding:8px 14px 10px; }
 .sheet-label { font-size:10px; font-family:'Space Mono',monospace; color:var(--muted2); text-transform:uppercase; letter-spacing:.8px; }
-.refresh-btn {
-  font-size:10px; font-family:'Space Mono',monospace;
-  background:none; border:1px solid var(--border); color:var(--muted2);
-  padding:3px 9px; border-radius:4px; cursor:pointer; transition:all .2s;
-}
-.refresh-btn:hover { border-color:var(--accent); color:var(--accent); }
-
-/* ── ARRIVALS LIST ── */
+.refresh-btn { font-size:10px; font-family:'Space Mono',monospace; background:none; border:1px solid var(--border); color:var(--muted2); padding:3px 9px; border-radius:4px; cursor:pointer; }
+.legend { display:flex; gap:12px; padding:0 14px 8px; }
+.legend-item { display:flex; align-items:center; gap:5px; font-size:10px; font-family:'Space Mono',monospace; color:var(--muted2); }
+.legend-dot { width:8px; height:8px; border-radius:2px; }
 .arrivals { padding-bottom:8px; }
-.arrival {
-  display:flex; align-items:center; gap:11px;
-  padding:9px 14px; border-bottom:1px solid var(--border);
-}
+.arrival { display:flex; align-items:center; gap:11px; padding:9px 14px; border-bottom:1px solid var(--border); }
 .arrival:last-child { border-bottom:none; }
-.badge {
-  width:34px; height:34px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Space Mono',monospace; font-size:11px; font-weight:700;
-  flex-shrink:0; color:#fff;
-}
-.badge.bus { border-radius:7px; font-size:9px; background:var(--accent); color:#000; }
+.badge { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Space Mono',monospace; font-size:11px; font-weight:700; flex-shrink:0; color:#fff; }
+.badge.bus { border-radius:7px; font-size:9px; }
+.badge.to-manhattan { background:var(--green); color:#000; }
+.badge.to-home { background:var(--red); color:#fff; }
+.badge.neutral { background:var(--accent); color:#000; }
 .arrival-body { flex:1; min-width:0; }
 .arrival-dest { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .arrival-sub { font-size:11px; color:var(--muted2); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.arrival-eta {
-  font-family:'Space Mono',monospace; font-size:14px; font-weight:700;
-  text-align:right; flex-shrink:0; color:var(--accent2);
-}
+.arrival-eta { font-family:'Space Mono',monospace; font-size:14px; font-weight:700; text-align:right; flex-shrink:0; color:var(--accent2); }
 .arrival-eta.soon { color:var(--accent); }
 .arrival-eta.now { color:var(--accent3); }
 .arrival-eta.unk { font-size:10px; color:var(--muted2); }
-
-/* ── FULL ARRIVALS VIEW ── */
 .full-arrivals { flex:1; overflow-y:auto; scrollbar-width:none; }
 .full-arrivals::-webkit-scrollbar { display:none; }
-.section-header {
-  padding:10px 14px 6px;
-  font-size:10px; font-family:'Space Mono',monospace;
-  color:var(--muted2); text-transform:uppercase; letter-spacing:.8px;
-  background:var(--bg); position:sticky; top:0; z-index:5;
-  border-bottom:1px solid var(--border);
-}
-
-/* ── INFO VIEW ── */
+.section-header { padding:10px 14px 6px; font-size:10px; font-family:'Space Mono',monospace; color:var(--muted2); text-transform:uppercase; letter-spacing:.8px; background:var(--bg); position:sticky; top:0; z-index:5; border-bottom:1px solid var(--border); }
 .info-view { flex:1; overflow-y:auto; padding:14px; scrollbar-width:none; }
 .info-view::-webkit-scrollbar { display:none; }
-.info-card {
-  background:var(--surface); border:1px solid var(--border);
-  border-radius:var(--radius); padding:14px; margin-bottom:12px;
-}
+.info-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px; margin-bottom:12px; }
 .info-card h3 { font-family:'Space Mono',monospace; font-size:12px; color:var(--accent); margin-bottom:8px; }
 .info-card p, .info-card li { font-size:12px; color:var(--muted2); line-height:1.6; }
 .info-card li { margin-left:14px; }
-.info-card code {
-  font-family:'Space Mono',monospace; font-size:10px;
-  background:var(--surface2); padding:2px 6px; border-radius:3px;
-  color:var(--text); display:inline-block; word-break:break-all;
-}
 .stop-grid { display:flex; flex-direction:column; gap:6px; margin-top:4px; }
 .stop-row { font-size:11px; font-family:'Space Mono',monospace; color:var(--muted2); line-height:1.5; }
 .stop-row strong { color:var(--text); }
-
-/* ── POPUP STYLES ── */
-.leaflet-popup-content-wrapper {
-  background:var(--surface); color:var(--text);
-  border:1px solid var(--border); border-radius:8px;
-  box-shadow:0 8px 32px rgba(0,0,0,.7); padding:0;
-}
+.leaflet-popup-content-wrapper { background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,.7); padding:0; }
 .leaflet-popup-content { margin:0; }
 .leaflet-popup-tip { background:var(--surface); }
 .leaflet-popup-close-button { color:var(--muted2) !important; }
@@ -192,59 +84,48 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
 .popup-route { font-family:'Space Mono',monospace; font-weight:700; font-size:13px; margin-bottom:3px; }
 .popup-dest { font-size:11px; color:var(--muted2); margin-bottom:6px; }
 .popup-eta { font-family:'Space Mono',monospace; font-size:11px; color:var(--accent2); font-weight:700; }
-
-/* ── STATES ── */
 .loading { display:flex; align-items:center; gap:9px; padding:16px 14px; color:var(--muted2); font-size:12px; font-family:'Space Mono',monospace; }
 .spinner { width:13px; height:13px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .empty { padding:20px 14px; text-align:center; font-size:11px; font-family:'Space Mono',monospace; color:var(--muted); line-height:1.7; }
 .error-msg { padding:10px 14px; font-size:11px; color:var(--accent3); font-family:'Space Mono',monospace; }
-
-/* ── LOCATION MARKER ── */
-.loc-marker {
-  background:var(--accent); color:#000;
-  font-family:'Space Mono',monospace; font-size:8px; font-weight:700;
-  padding:2px 5px; border-radius:3px; white-space:nowrap;
-  border:1px solid rgba(0,0,0,.3); box-shadow:0 2px 6px rgba(0,0,0,.5);
-}
-.bus-pin {
-  background:var(--accent); color:#000;
-  font-family:'Space Mono',monospace; font-size:9px; font-weight:700;
-  width:28px; height:20px; border-radius:4px;
-  display:flex; align-items:center; justify-content:center;
-  border:1.5px solid rgba(0,0,0,.4); box-shadow:0 2px 8px rgba(0,0,0,.6);
-}
+.loc-marker { background:var(--accent); color:#000; font-family:'Space Mono',monospace; font-size:8px; font-weight:700; padding:2px 5px; border-radius:3px; white-space:nowrap; border:1px solid rgba(0,0,0,.3); box-shadow:0 2px 6px rgba(0,0,0,.5); }
+.bus-pin { font-family:'Space Mono',monospace; font-size:9px; font-weight:700; width:28px; height:20px; border-radius:4px; display:flex; align-items:center; justify-content:center; border:1.5px solid rgba(0,0,0,.4); box-shadow:0 2px 8px rgba(0,0,0,.6); }
+.bus-pin.to-manhattan { background:#3dffc0; color:#000; }
+.bus-pin.to-home { background:#ff6b6b; color:#fff; }
+.bus-pin.neutral { background:var(--accent); color:#000; }
+.subway-pin { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid rgba(0,0,0,.5); box-shadow:0 2px 8px rgba(0,0,0,.7); }
+/* ONBOARDING MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; max-width:360px; width:100%; }
+.modal h2 { font-family:'Space Mono',monospace; font-size:14px; color:var(--accent); margin-bottom:6px; }
+.modal p { font-size:12px; color:var(--muted2); margin-bottom:18px; line-height:1.6; }
+.modal-label { font-size:10px; font-family:'Space Mono',monospace; color:var(--muted2); text-transform:uppercase; letter-spacing:.8px; margin-bottom:8px; }
+.modal-options { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
+.modal-option { padding:10px 14px; border:1px solid var(--border); border-radius:8px; font-size:13px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:10px; }
+.modal-option:hover { border-color:var(--accent); }
+.modal-option.selected { border-color:var(--accent); background:rgba(240,225,74,.08); }
+.modal-option .opt-label { font-family:'Space Mono',monospace; font-size:10px; font-weight:700; padding:2px 7px; border-radius:3px; background:var(--accent); color:#000; flex-shrink:0; }
+.modal-btn { width:100%; padding:12px; background:var(--accent); color:#000; border:none; border-radius:8px; font-family:'Space Mono',monospace; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .15s; }
+.modal-btn:disabled { opacity:.4; cursor:not-allowed; }
+.modal-step { display:none; }
+.modal-step.active { display:block; }
 </style>
 </head>
 <body>
 <div class="app">
-
-  <!-- HEADER -->
   <div class="header">
     <div class="wordmark"><em>MTA</em>tracker</div>
-    <div class="live-badge">
-      <div class="dot" id="liveDot"></div>
-      <span id="liveText">—</span>
-    </div>
+    <div class="live-badge"><div class="dot" id="liveDot"></div><span id="liveText">—</span></div>
   </div>
-
-  <!-- LOCATION STRIP -->
   <div class="loc-strip" id="locStrip"></div>
-
-  <!-- PROGRESS BAR -->
   <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-
-  <!-- TAB BAR -->
   <div class="tab-bar">
     <div class="tab active" id="tab-map" onclick="switchTab('map')">MAP</div>
     <div class="tab" id="tab-list" onclick="switchTab('list')">ARRIVALS</div>
     <div class="tab" id="tab-info" onclick="switchTab('info')">INFO</div>
   </div>
-
-  <!-- CONTENT -->
   <div class="content">
-
-    <!-- MAP TAB -->
     <div class="map-view" id="view-map">
       <div id="map"></div>
       <div class="sheet" id="sheet">
@@ -253,122 +134,107 @@ html, body { height:100%; overflow:hidden; background:var(--bg); color:var(--tex
           <span class="sheet-label" id="sheetLabel">loading...</span>
           <button class="refresh-btn" onclick="triggerRefresh()">↻ now</button>
         </div>
-        <div class="arrivals" id="sheetArrivals">
-          <div class="loading"><div class="spinner"></div>fetching buses...</div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#3dffc0"></div>to manhattan</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff6b6b"></div>to home</div>
         </div>
+        <div class="arrivals" id="sheetArrivals"><div class="loading"><div class="spinner"></div>fetching...</div></div>
       </div>
     </div>
-
-    <!-- LIST TAB -->
-    <div class="full-arrivals" id="view-list" style="display:none">
-      <div id="listArrivals"></div>
-    </div>
-
-    <!-- INFO TAB -->
+    <div class="full-arrivals" id="view-list" style="display:none"><div id="listArrivals"></div></div>
     <div class="info-view" id="view-info" style="display:none">
-      <div class="info-card">
-        <h3>HOW TO DEPLOY</h3>
-        <p>This app needs a free Vercel backend to proxy MTA's API (MTA blocks direct browser requests). Steps:</p>
-        <ol style="margin:8px 0 0 16px">
-          <li style="margin-bottom:4px">Install Vercel CLI: <code>npm i -g vercel</code></li>
-          <li style="margin-bottom:4px">In the project folder, run: <code>vercel</code></li>
-          <li style="margin-bottom:4px">Add env var: <code>MTA_BUS_KEY = cae896f4-...</code></li>
-          <li style="margin-bottom:4px">Redeploy: <code>vercel --prod</code></li>
-          <li>Share the <code>.vercel.app</code> URL with your partner</li>
-        </ol>
-      </div>
-      <div class="info-card">
-        <h3>STOPS CONFIGURED</h3>
-        <div class="stop-grid" id="stopGrid"></div>
-      </div>
-      <div class="info-card">
-        <h3>DATA SOURCES</h3>
-        <ul>
-          <li>Bus ETAs: MTA BusTime SIRI StopMonitoring API</li>
-          <li>Subway: Hardcoded nearby lines (live ETAs need protobuf backend — coming next)</li>
-          <li>Map: OpenStreetMap via CartoDB Dark</li>
-          <li>Refresh rate: 30s (MTA API limit)</li>
-        </ul>
-      </div>
-      <div class="info-card">
-        <h3>YOUR API KEY</h3>
-        <p style="margin-bottom:6px">Stored only in Vercel environment. Not in this HTML file.</p>
-        <code>cae896f4-1935-4da6-b8eb-724eb661403f</code>
-      </div>
+      <div class="info-card"><h3>STOPS CONFIGURED</h3><div class="stop-grid" id="stopGrid"></div></div>
+      <div class="info-card"><h3>DATA SOURCES</h3><ul>
+        <li>Bus ETAs: MTA BusTime SIRI StopMonitoring API</li>
+        <li>Subway: Station markers on map, tap for MTA live board</li>
+        <li>Map: OpenStreetMap via CartoDB Dark</li>
+        <li>Refresh: 30s</li>
+      </ul></div>
     </div>
+  </div>
+</div>
 
+<!-- ONBOARDING MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-step active" id="step1">
+      <h2>WHERE ARE YOU?</h2>
+      <p>Select your starting location to see nearby arrivals.</p>
+      <div class="modal-label">I am at...</div>
+      <div class="modal-options" id="fromOptions"></div>
+    </div>
+    <div class="modal-step" id="step2">
+      <h2>WHERE TO?</h2>
+      <p>Select your destination to highlight routes heading that way.</p>
+      <div class="modal-label">I'm heading to...</div>
+      <div class="modal-options" id="toOptions"></div>
+      <button class="modal-btn" id="goBtn" onclick="confirmTrip()" disabled>Show My Trip →</button>
+    </div>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-// STOP DATABASE — MTA stop IDs for your 4 locations
-// These are real MTA BusTime stop IDs near each spot
-// ═══════════════════════════════════════════════════
 const LOCATIONS = [
   {
-    id: 'home',
-    label: 'HOME',
-    desc: 'East Elmhurst / Jackson Hts',
-    lat: 40.7545,
-    lng: -73.8834,
+    id: 'home', label: 'HOME', desc: 'East Elmhurst / Jackson Hts',
+    lat: 40.7545, lng: -73.8834,
     stops: [
-      { id: '551878', name: 'Northern Blvd & 94 St', routes: ['Q47','Q72'] },
-      { id: '551879', name: 'Northern Blvd & 92 St', routes: ['Q47','Q72'] },
-      { id: '551119', name: 'Astoria Blvd & 94 St', routes: ['Q19','Q33'] },
-      { id: '503574', name: 'Jackson Ave & 94 St', routes: ['Q47'] },
+      { id: '551878', name: 'Northern Blvd/82 St', routes: ['Q63','Q66'] },
+      { id: '551879', name: 'Northern Blvd/82 St', routes: ['Q63','Q66'] },
+      { id: '551119', name: '83 St/Northern Blvd', routes: ['Q33'] },
+      { id: '503574', name: '82 St/Northern Blvd', routes: ['Q32','Q33'] },
     ],
     subwayLines: ['7','E','F','M','R'],
-    subwayStation: 'Jackson Hts-Roosevelt Av',
-    subwayLink: 'https://new.mta.info/stops/subway/74-St-Broadway'
+    subwayStations: [
+      { name: 'Jackson Hts-Roosevelt Av', lat: 40.7466, lng: -73.8914, lines: ['7','E','F','M','R'], link: 'https://new.mta.info/stops/subway/74-St-Broadway' },
+      { name: 'Junction Blvd', lat: 40.7487, lng: -73.8698, lines: ['7'], link: 'https://new.mta.info/stops/subway/Junction-Blvd' },
+    ]
   },
   {
-    id: 'nds',
-    label: 'NDS',
-    desc: 'Harlem, Manhattan',
-    lat: 40.8130,
-    lng: -73.9495,
+    id: 'nds', label: 'NDS', desc: 'Harlem, Manhattan',
+    lat: 40.8130, lng: -73.9495,
     stops: [
-      { id: '405182', name: 'Frederick Douglass Blvd & 116 St', routes: ['M2','M3','M7','M116'] },
-      { id: '401318', name: '7 Av & W 127 St', routes: ['M7','M102'] },
-      { id: '402509', name: 'Lenox Av & W 125 St', routes: ['M1','M7','M102','M60'] },
-      { id: '402656', name: 'Adam Clayton Powell Jr Blvd & 128 St', routes: ['M2','M3'] },
+      { id: '405182', name: 'Frederick Douglass/W 125 St', routes: ['M10'] },
+      { id: '401318', name: 'Frederick Douglass/W 125 St', routes: ['M10'] },
+      { id: '402509', name: 'W 125 St/Frederick Douglass', routes: ['M101','M125'] },
+      { id: '402656', name: 'W 125 St/Saint Nicholas Ave', routes: ['M60-SBS'] },
     ],
-    subwayLines: ['2','3','B','C'],
-    subwayStation: '125 St (2,3) / 116 St',
-    subwayLink: 'https://new.mta.info/stops/subway/125-St-2-3'
+    subwayLines: ['2','3','B','C','A','D'],
+    subwayStations: [
+      { name: '125 St (A/B/C/D)', lat: 40.8108, lng: -73.9524, lines: ['A','B','C','D'], link: 'https://new.mta.info/stops/subway/125-St-A-B-C-D' },
+      { name: '125 St (2/3)', lat: 40.8079, lng: -73.9454, lines: ['2','3'], link: 'https://new.mta.info/stops/subway/125-St-2-3' },
+    ]
   },
   {
-    id: 'cuny',
-    label: 'CUNY LAW',
-    desc: 'LIC, Queens',
-    lat: 40.7488,
-    lng: -73.8441,
+    id: 'cuny', label: 'CUNY LAW', desc: 'LIC, Queens',
+    lat: 40.7474, lng: -73.9440,
     stops: [
-      { id: '504410', name: 'Queens Blvd & Van Dam St', routes: ['Q60','Q53','Q38'] },
-      { id: '504079', name: 'Queens Blvd & Skillman Ave', routes: ['Q60','Q53'] },
-      { id: '505290', name: 'Jackson Ave & Queens Plaza S', routes: ['Q101','Q102'] },
-      { id: '701062', name: 'Jackson Ave & Thomson Ave', routes: ['Q101'] },
+      { id: '504410', name: 'Jackson Ave/Davis St', routes: ['Q67','Q101'] },
+      { id: '504079', name: 'Jackson Ave/Thompson Ave', routes: ['Q67','Q96'] },
+      { id: '505290', name: 'Jackson Ave/23 St', routes: ['B94','Q67','Q101'] },
+      { id: '701062', name: 'Thomson Ave/Jackson Ave', routes: ['Q63'] },
     ],
     subwayLines: ['7','E','M','G'],
-    subwayStation: 'Court Sq / Queens Plaza',
-    subwayLink: 'https://new.mta.info/stops/subway/Court-Sq'
+    subwayStations: [
+      { name: 'Court Sq', lat: 40.7472, lng: -73.9454, lines: ['7','E','M','G'], link: 'https://new.mta.info/stops/subway/Court-Sq' },
+      { name: 'Queens Plaza', lat: 40.7489, lng: -73.9373, lines: ['E','M','R'], link: 'https://new.mta.info/stops/subway/Queens-Plaza' },
+    ]
   },
   {
-    id: 'legal',
-    label: 'LEGAL AID',
-    desc: 'Downtown Manhattan',
-    lat: 40.7149,
-    lng: -74.0117,
+    id: 'legal', label: 'LEGAL AID', desc: 'Downtown Manhattan',
+    lat: 40.7149, lng: -74.0117,
     stops: [
-      { id: '403858', name: 'Broadway & Chambers St', routes: ['M22','M9'] },
-      { id: '404972', name: 'Broadway & Warren St', routes: ['M22'] },
-      { id: '404973', name: 'Church St & Reade St', routes: ['M20'] },
-      { id: '450422', name: 'Hudson St & Chambers St', routes: ['M20','M21'] },
+      { id: '403858', name: 'Chambers St/Greenwich St', routes: ['M22'] },
+      { id: '404972', name: 'Chambers St/Hudson St', routes: ['M20','M22'] },
+      { id: '404973', name: 'Chambers St/Greenwich St', routes: ['M20','M22'] },
+      { id: '450422', name: 'Warren St/Church St', routes: ['M9'] },
     ],
     subwayLines: ['A','C','2','3','N','R','W'],
-    subwayStation: 'Chambers St / Fulton St',
-    subwayLink: 'https://new.mta.info/stops/subway/Chambers-St-2-3'
+    subwayStations: [
+      { name: 'Chambers St (A/C)', lat: 40.7139, lng: -74.0089, lines: ['A','C'], link: 'https://new.mta.info/stops/subway/Chambers-St-A-C' },
+      { name: 'Chambers St (2/3)', lat: 40.7145, lng: -74.0072, lines: ['2','3'], link: 'https://new.mta.info/stops/subway/Chambers-St-2-3' },
+      { name: 'City Hall (N/R/W)', lat: 40.7135, lng: -74.0094, lines: ['N','R','W'], link: 'https://new.mta.info/stops/subway/City-Hall' },
+    ]
   }
 ];
 
@@ -378,40 +244,103 @@ const SUBWAY_COLORS = {
   '7':'#b933ad',
   'A':'#0039a6','C':'#0039a6','E':'#0039a6',
   'B':'#ff6319','D':'#ff6319','F':'#ff6319','M':'#ff6319',
-  'G':'#6cbe45',
-  'J':'#996633','Z':'#996633',
-  'L':'#a7a9ac',
-  'N':'#fccc0a','Q':'#fccc0a','R':'#fccc0a','W':'#fccc0a',
-  'S':'#808183',
+  'G':'#6cbe45','J':'#996633','Z':'#996633','L':'#a7a9ac',
+  'N':'#fccc0a','Q':'#fccc0a','R':'#fccc0a','W':'#fccc0a','S':'#808183',
 };
 
-// ═══════════════════════════════════════════════════
+// Direction keywords — destinations containing these = toward Manhattan
+const MANHATTAN_KEYWORDS = [
+  'penn','midtown','manhattan','downtown','jamaica','flatbush','flushing main',
+  'port authority','times sq','34 st','42 st','fulton','brooklyn','bronx',
+  'queens plaza','long island city','lic','bridge','tunnel','grand central',
+  'terminal','jfk','laguardia','airport','via','westchester','upper west',
+  'harlem','columbia','inwood','washington heights','riverdale','fordham'
+];
+const HOME_KEYWORDS = [
+  'east elmhurst','jackson heights','northern blvd','corona','elmhurst',
+  'flushing','auburndale','college point','whitestone','bay terrace',
+  'astoria','woodside','sunnyside','maspeth','ridgewood','glendale',
+  'forest hills','jamaica','hollis','queens village','bayside','fresh meadows'
+];
+
+function getDirection(destination) {
+  if (!destination) return 'neutral';
+  const d = destination.toLowerCase();
+  if (MANHATTAN_KEYWORDS.some(k => d.includes(k))) return 'to-manhattan';
+  if (HOME_KEYWORDS.some(k => d.includes(k))) return 'to-home';
+  return 'neutral';
+}
+
 // STATE
-// ═══════════════════════════════════════════════════
-let map, currentLoc = LOCATIONS[0];
-let busMarkers = {};
+let map, currentLoc = LOCATIONS[0], tripFrom = null, tripTo = null;
+let busMarkers = {}, subwayMarkers = [];
 let allArrivals = [];
 let refreshTimer = null, countdownTimer = null, secondsLeft = 30;
-let activeTab = 'map';
-
-// API base — empty string = same origin (works when deployed to Vercel)
-// For local testing, set to your Vercel deployment URL
 const API_BASE = '';
 
-// ═══════════════════════════════════════════════════
 // BOOT
-// ═══════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => {
   buildLocStrip();
   buildStopGrid();
+  buildModal();
   initMap();
-  fetchAndRender();
-  startCycle();
+  // Show modal on load
+  document.getElementById('modalOverlay').style.display = 'flex';
 });
 
-// ═══════════════════════════════════════════════════
-// UI BUILDERS
-// ═══════════════════════════════════════════════════
+// MODAL
+function buildModal() {
+  const fromOpts = document.getElementById('fromOptions');
+  const toOpts = document.getElementById('toOptions');
+  LOCATIONS.forEach(loc => {
+    const div = document.createElement('div');
+    div.className = 'modal-option';
+    div.innerHTML = `<span class="opt-label">${loc.label}</span><span>${loc.desc}</span>`;
+    div.onclick = () => selectFrom(loc, div);
+    fromOpts.appendChild(div);
+  });
+  LOCATIONS.forEach(loc => {
+    const div = document.createElement('div');
+    div.className = 'modal-option';
+    div.innerHTML = `<span class="opt-label">${loc.label}</span><span>${loc.desc}</span>`;
+    div.onclick = () => selectTo(loc, div);
+    toOpts.appendChild(div);
+  });
+}
+
+function selectFrom(loc, el) {
+  document.querySelectorAll('#fromOptions .modal-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  tripFrom = loc;
+  // advance to step 2
+  setTimeout(() => {
+    document.getElementById('step1').classList.remove('active');
+    document.getElementById('step2').classList.add('active');
+  }, 200);
+}
+
+function selectTo(loc, el) {
+  document.querySelectorAll('#toOptions .modal-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  tripTo = loc;
+  document.getElementById('goBtn').disabled = false;
+}
+
+function confirmTrip() {
+  document.getElementById('modalOverlay').style.display = 'none';
+  currentLoc = tripFrom;
+  // activate chip
+  document.querySelectorAll('.loc-chip').forEach((c, i) => {
+    c.classList.toggle('active', LOCATIONS[i].id === tripFrom.id);
+  });
+  map.flyTo([tripFrom.lat, tripFrom.lng], 15, { duration: 0.8 });
+  clearBusMarkers();
+  plotSubwayStations();
+  fetchAndRender();
+  startCycle();
+}
+
+// LOC STRIP
 function buildLocStrip() {
   const strip = document.getElementById('locStrip');
   LOCATIONS.forEach((loc, i) => {
@@ -424,6 +353,8 @@ function buildLocStrip() {
       currentLoc = loc;
       map.flyTo([loc.lat, loc.lng], 15, { duration: 0.7 });
       clearBusMarkers();
+      clearSubwayMarkers();
+      plotSubwayStations();
       renderLoading();
       fetchAndRender();
     };
@@ -436,48 +367,67 @@ function buildStopGrid() {
   LOCATIONS.forEach(loc => {
     const div = document.createElement('div');
     div.className = 'stop-row';
-    div.innerHTML = `<strong>${loc.label}</strong> — ${loc.stops.map(s => s.name.split('&')[0].trim()).join(', ')}`;
+    div.innerHTML = `<strong>${loc.label}</strong> — ${loc.stops.map(s => s.name).join(', ')}`;
     grid.appendChild(div);
   });
 }
 
-// ═══════════════════════════════════════════════════
 // MAP
-// ═══════════════════════════════════════════════════
 function initMap() {
   map = L.map('map', { zoomControl: false, attributionControl: false })
     .setView([currentLoc.lat, currentLoc.lng], 15);
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, subdomains: 'abcd'
+  }).addTo(map);
   L.control.zoom({ position: 'topright' }).addTo(map);
-
-  // Pin all 4 locations
   LOCATIONS.forEach(loc => {
-    const icon = L.divIcon({
-      html: `<div class="loc-marker">${loc.label}</div>`,
-      className: '', iconAnchor: [0, 8]
-    });
+    const icon = L.divIcon({ html: `<div class="loc-marker">${loc.label}</div>`, className: '', iconAnchor: [0, 8] });
     L.marker([loc.lat, loc.lng], { icon }).addTo(map)
       .bindPopup(`<div class="popup"><div class="popup-route">${loc.label}</div><div class="popup-dest">${loc.desc}</div></div>`);
   });
+  plotSubwayStations();
+}
+
+function plotSubwayStations() {
+  if (!currentLoc.subwayStations) return;
+  currentLoc.subwayStations.forEach(station => {
+    const line = station.lines[0];
+    const color = SUBWAY_COLORS[line] || '#888';
+    const textColor = ['N','Q','R','W','G'].includes(line) ? '#000' : '#fff';
+    const icon = L.divIcon({
+      html: `<div class="subway-pin" style="background:${color};color:${textColor}">${line}</div>`,
+      className: '', iconAnchor: [12, 12]
+    });
+    const linesStr = station.lines.join(' ');
+    const m = L.marker([station.lat, station.lng], { icon }).addTo(map)
+      .bindPopup(`<div class="popup">
+        <div class="popup-route">🚇 ${linesStr}</div>
+        <div class="popup-dest">${station.name}</div>
+        <div class="popup-eta"><a href="${station.link}" target="_blank" style="color:#3dffc0">live board →</a></div>
+      </div>`);
+    subwayMarkers.push(m);
+  });
+}
+
+function clearSubwayMarkers() {
+  subwayMarkers.forEach(m => map.removeLayer(m));
+  subwayMarkers = [];
 }
 
 function plotBus(v) {
   if (!v.vehicleLat || !v.vehicleLng) return;
   const key = v.vehicleRef || `${v.route}-${v.vehicleLat}`;
-
+  const dir = getDirection(v.destination);
   const icon = L.divIcon({
-    html: `<div class="bus-pin">${v.route}</div>`,
+    html: `<div class="bus-pin ${dir}">${v.route}</div>`,
     className: '', iconAnchor: [14, 10]
   });
-
   const eta = formatEta(v);
   const popup = `<div class="popup">
     <div class="popup-route">🚌 ${v.route}</div>
     <div class="popup-dest">${v.destination || '—'}</div>
     <div class="popup-eta">${eta.text}</div>
   </div>`;
-
   if (busMarkers[key]) {
     busMarkers[key].setLatLng([v.vehicleLat, v.vehicleLng]).setPopupContent(popup);
   } else {
@@ -490,119 +440,77 @@ function clearBusMarkers() {
   busMarkers = {};
 }
 
-// ═══════════════════════════════════════════════════
-// DATA FETCH
-// ═══════════════════════════════════════════════════
+// FETCH
 async function fetchAndRender() {
   setLive(false, 'fetching...');
-
   const stopIds = currentLoc.stops.map(s => s.id);
   const params = stopIds.map(id => `stopId=${id}`).join('&');
-
   let busArrivals = [];
   try {
     const res = await fetch(`${API_BASE}/api/bus?${params}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-
     const seenVehicles = new Set();
     for (const stop of data.stops) {
       for (const v of stop.visits) {
-        // Deduplicate same vehicle across stops
         const vkey = v.vehicleRef || `${v.route}-${v.destination}`;
         if (seenVehicles.has(vkey)) continue;
         seenVehicles.add(vkey);
-
         busArrivals.push({ ...v, type: 'bus', stopId: stop.stopId });
         plotBus(v);
       }
     }
-
-    // Remove stale markers
     const activeKeys = new Set(busArrivals.map(v => v.vehicleRef || `${v.route}-${v.destination}`));
     Object.entries(busMarkers).forEach(([k, m]) => {
       if (!activeKeys.has(k)) { map.removeLayer(m); delete busMarkers[k]; }
     });
-
   } catch (err) {
     console.error('Bus fetch error:', err);
     showError(err.message);
   }
-
-  // Build subway rows (static lines, links to MTA real-time)
-  const subwayArrivals = currentLoc.subwayLines.map(line => ({
-    type: 'subway',
-    route: line,
-    destination: currentLoc.subwayStation,
-    sub: 'tap to open MTA live board',
-    link: currentLoc.subwayLink,
-    etaMins: null,
-  }));
-
-  allArrivals = [...busArrivals, ...subwayArrivals];
+  allArrivals = busArrivals;
   render();
   setLive(true, `updated ${fmt(new Date())}`);
 }
 
-// ═══════════════════════════════════════════════════
 // RENDER
-// ═══════════════════════════════════════════════════
 function render() {
-  const buses = allArrivals.filter(a => a.type === 'bus')
+  const buses = allArrivals
+    .filter(a => a.type === 'bus')
     .sort((a, b) => (etaMinutes(a) ?? 999) - (etaMinutes(b) ?? 999));
-  const subway = allArrivals.filter(a => a.type === 'subway');
+
+  const toManhattan = buses.filter(a => getDirection(a.destination) === 'to-manhattan');
+  const toHome = buses.filter(a => getDirection(a.destination) === 'to-home');
+  const neutral = buses.filter(a => getDirection(a.destination) === 'neutral');
 
   const busHtml = buses.length
-    ? buses.map(a => arrivalRow(a)).join('')
-    : `<div class="empty">no buses found at nearby stops\ncheck INFO tab for stop IDs</div>`;
+    ? [
+        toManhattan.length ? `<div class="section-header" style="color:#3dffc0">→ toward manhattan (${toManhattan.length})</div>${toManhattan.map(a => arrivalRow(a)).join('')}` : '',
+        toHome.length ? `<div class="section-header" style="color:#ff6b6b">→ toward home (${toHome.length})</div>${toHome.map(a => arrivalRow(a)).join('')}` : '',
+        neutral.length ? `<div class="section-header">→ other (${neutral.length})</div>${neutral.map(a => arrivalRow(a)).join('')}` : '',
+      ].join('')
+    : `<div class="empty">no buses found at nearby stops</div>`;
 
-  const subwayHtml = subway.map(a => arrivalRow(a)).join('');
-
-  const combined = buses.length
-    ? `${busHtml}<div class="section-header">subway — tap for live ETAs</div>${subwayHtml}`
-    : `<div class="section-header">buses</div>${busHtml}<div class="section-header">subway — tap for live ETAs</div>${subwayHtml}`;
-
-  // Sheet (map tab) — show first 5 buses + subway hint
-  const sheetBuses = buses.slice(0, 5).map(a => arrivalRow(a)).join('') ||
-    `<div class="empty">no buses nearby right now</div>`;
+  const sheetBuses = buses.slice(0, 6).map(a => arrivalRow(a)).join('') || `<div class="empty">no buses nearby right now</div>`;
   document.getElementById('sheetArrivals').innerHTML = sheetBuses;
-  document.getElementById('sheetLabel').textContent =
-    `${buses.length} bus${buses.length !== 1 ? 'es' : ''} · ${currentLoc.label.toLowerCase()}`;
-
-  // Full list tab
-  document.getElementById('listArrivals').innerHTML =
-    `<div class="section-header">buses near ${currentLoc.label.toLowerCase()}</div>${busHtml}` +
-    `<div class="section-header">subway — ${currentLoc.subwayStation}</div>${subwayHtml}`;
+  document.getElementById('sheetLabel').textContent = `${buses.length} bus${buses.length !== 1 ? 'es' : ''} · ${currentLoc.label.toLowerCase()}`;
+  document.getElementById('listArrivals').innerHTML = `<div class="section-header">buses near ${currentLoc.label.toLowerCase()}</div>${busHtml}`;
 }
 
 function arrivalRow(a) {
   const eta = formatEta(a);
-  let badge;
-
-  if (a.type === 'bus') {
-    badge = `<div class="badge bus">${a.route}</div>`;
-  } else {
-    const color = SUBWAY_COLORS[a.route] || '#888';
-    const textColor = ['N','Q','R','W'].includes(a.route) ? '#000' : '#fff';
-    badge = `<div class="badge" style="background:${color};color:${textColor}">${a.route}</div>`;
-  }
-
-  const rowContent = `${badge}
+  const dir = a.type === 'bus' ? getDirection(a.destination) : 'neutral';
+  const badge = `<div class="badge bus ${dir}">${a.route}</div>`;
+  return `<div class="arrival">
+    ${badge}
     <div class="arrival-body">
       <div class="arrival-dest">${a.destination || 'In service'}</div>
-      <div class="arrival-sub">${a.type === 'bus' ? (a.stopName || a.proximityText || '') : a.sub}</div>
+      <div class="arrival-sub">${a.stopName || a.proximityText || ''}</div>
     </div>
-    <div class="arrival-eta ${eta.cls}">${eta.text}</div>`;
-
-  if (a.link) {
-    return `<a class="arrival" href="${a.link}" target="_blank" style="text-decoration:none;color:inherit">${rowContent}</a>`;
-  }
-  return `<div class="arrival">${rowContent}</div>`;
+    <div class="arrival-eta ${eta.cls}">${eta.text}</div>
+  </div>`;
 }
 
-// ═══════════════════════════════════════════════════
-// ETA HELPERS
-// ═══════════════════════════════════════════════════
 function etaMinutes(a) {
   if (a.expectedArrival) return Math.round((new Date(a.expectedArrival) - Date.now()) / 60000);
   if (a.aimedArrival) return Math.round((new Date(a.aimedArrival) - Date.now()) / 60000);
@@ -610,8 +518,6 @@ function etaMinutes(a) {
 }
 
 function formatEta(a) {
-  if (a.type === 'subway') return { text: '→ MTA', cls: 'unk' };
-
   const mins = etaMinutes(a);
   if (mins !== null) {
     if (mins <= 0) return { text: 'NOW', cls: 'now' };
@@ -623,9 +529,6 @@ function formatEta(a) {
   return { text: '—', cls: 'unk' };
 }
 
-// ═══════════════════════════════════════════════════
-// REFRESH CYCLE
-// ═══════════════════════════════════════════════════
 function startCycle() {
   secondsLeft = 30;
   refreshTimer = setInterval(() => { secondsLeft = 30; fetchAndRender(); }, 30000);
@@ -637,16 +540,10 @@ function startCycle() {
 
 function triggerRefresh() {
   clearInterval(refreshTimer); clearInterval(countdownTimer);
-  secondsLeft = 30;
-  fetchAndRender();
-  startCycle();
+  secondsLeft = 30; fetchAndRender(); startCycle();
 }
 
-// ═══════════════════════════════════════════════════
-// TAB SWITCHING
-// ═══════════════════════════════════════════════════
 function switchTab(tab) {
-  activeTab = tab;
   ['map','list','info'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
     document.getElementById(`view-${t}`).style.display = t === tab ? (t === 'map' ? 'flex' : 'block') : 'none';
@@ -654,9 +551,6 @@ function switchTab(tab) {
   if (tab === 'map') setTimeout(() => map.invalidateSize(), 50);
 }
 
-// ═══════════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════════
 function setLive(live, text) {
   document.getElementById('liveDot').className = 'dot' + (live ? ' live' : '');
   document.getElementById('liveText').textContent = text;
@@ -668,7 +562,7 @@ function renderLoading() {
 }
 
 function showError(msg) {
-  document.getElementById('sheetArrivals').innerHTML = `<div class="error-msg">⚠ ${msg}<br>check INFO tab for deploy steps</div>`;
+  document.getElementById('sheetArrivals').innerHTML = `<div class="error-msg">⚠ ${msg}</div>`;
 }
 
 function fmt(d) {
