@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Recipe Chat">
+<title>Recipe Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808; --surface: #121212; --surface2: #1a1a1a;
+  --border: #242424; --accent: #f0e14a; --accent2: #3dffc0;
+  --accent3: #ff6b6b; --text: #ede8df; --muted: #555; --muted2: #888;
+  --radius: 10px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; overflow:hidden; }
+
+.app { display:flex; flex-direction:column; height:100dvh; padding-top:var(--safe-top); }
+
+/* HEADER */
+.header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 16px 9px; border-bottom:1px solid var(--border);
+  flex-shrink:0; background:var(--bg);
+}
+.wordmark { font-family:'Space Mono',monospace; font-size:15px; font-weight:700; letter-spacing:-0.5px; }
+.wordmark em { color:var(--accent); font-style:normal; }
+.header-right { display:flex; align-items:center; gap:10px; }
+.new-btn {
+  font-size:10px; font-family:'Space Mono',monospace;
+  background:none; border:1px solid var(--border); color:var(--muted2);
+  padding:4px 10px; border-radius:4px; cursor:pointer;
+  display:none;
+}
+.new-btn.visible { display:block; }
+
+/* UPLOAD SCREEN */
+.upload-screen {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:32px 24px;
+  gap:0;
+}
+.upload-icon { font-size:48px; margin-bottom:20px; }
+.upload-title {
+  font-family:'Space Mono',monospace; font-size:14px; font-weight:700;
+  color:var(--accent); margin-bottom:8px; text-align:center; letter-spacing:-0.3px;
+}
+.upload-sub {
+  font-size:13px; color:var(--muted2); text-align:center;
+  line-height:1.6; margin-bottom:32px; max-width:280px;
+}
+.upload-btn {
+  width:100%; max-width:320px; padding:16px;
+  background:var(--accent); color:#000; border:none; border-radius:var(--radius);
+  font-family:'Space Mono',monospace; font-size:13px; font-weight:700;
+  cursor:pointer; letter-spacing:0.3px; transition:opacity .15s;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.upload-btn:active { opacity:0.8; }
+#fileInput { display:none; }
+
+.divider {
+  display:flex; align-items:center; gap:12px;
+  width:100%; max-width:320px; margin:20px 0;
+}
+.divider-line { flex:1; height:1px; background:var(--border); }
+.divider-text { font-size:10px; font-family:'Space Mono',monospace; color:var(--muted); }
+
+.shortcut-info {
+  width:100%; max-width:320px;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  overflow:hidden;
+}
+.shortcut-toggle {
+  width:100%; background:none; border:none; color:var(--muted2);
+  padding:12px 14px; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+  font-size:11px; font-family:'Space Mono',monospace; letter-spacing:.3px;
+}
+.shortcut-toggle .arrow { transition:transform .2s; }
+.shortcut-toggle.open .arrow { transform:rotate(180deg); }
+.shortcut-body {
+  display:none; padding:0 14px 14px;
+  font-size:11px; color:var(--muted2); line-height:1.7;
+}
+.shortcut-body.visible { display:block; }
+.shortcut-step { display:flex; gap:8px; margin-bottom:6px; }
+.shortcut-step-num {
+  font-family:'Space Mono',monospace; font-size:10px; font-weight:700;
+  color:var(--accent); min-width:16px; padding-top:1px;
+}
+.shortcut-body .note {
+  margin-top:10px; padding:8px 10px; background:var(--surface2);
+  border-left:2px solid var(--accent); border-radius:0 4px 4px 0;
+  font-size:10px; color:var(--muted);
+}
+.shortcut-body code {
+  font-family:'Space Mono',monospace; font-size:10px;
+  background:var(--surface2); padding:1px 4px; border-radius:3px; color:var(--text);
+}
+
+/* LOADING SCREEN */
+.loading-screen {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:14px;
+  display:none;
+}
+.loading-screen.visible { display:flex; }
+.spinner {
+  width:22px; height:22px; border:2px solid var(--border);
+  border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:12px; font-family:'Space Mono',monospace; color:var(--muted2); }
+
+/* CHAT SCREEN */
+.chat-screen { flex:1; display:none; flex-direction:column; min-height:0; }
+.chat-screen.visible { display:flex; }
+
+.recipe-bar {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 14px; border-bottom:1px solid var(--border);
+  background:var(--surface); flex-shrink:0;
+}
+.recipe-icon { font-size:16px; flex-shrink:0; }
+.recipe-name {
+  flex:1; font-size:11px; font-family:'Space Mono',monospace;
+  color:var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  letter-spacing:.2px;
+}
+
+.messages {
+  flex:1; overflow-y:auto; padding:16px 14px 8px;
+  display:flex; flex-direction:column; gap:12px;
+  scrollbar-width:none;
+}
+.messages::-webkit-scrollbar { display:none; }
+
+.msg { max-width:88%; display:flex; flex-direction:column; gap:3px; }
+.msg.user { align-self:flex-end; align-items:flex-end; }
+.msg.assistant { align-self:flex-start; align-items:flex-start; }
+
+.bubble {
+  padding:10px 13px; border-radius:14px; font-size:13px; line-height:1.55;
+  word-break:break-word;
+}
+.msg.user .bubble {
+  background:var(--accent); color:#000; font-weight:500;
+  border-bottom-right-radius:4px;
+}
+.msg.assistant .bubble {
+  background:var(--surface); border:1px solid var(--border); color:var(--text);
+  border-bottom-left-radius:4px;
+}
+
+.msg-time {
+  font-size:9px; font-family:'Space Mono',monospace;
+  color:var(--muted); padding:0 3px;
+}
+
+/* INPUT BAR */
+.input-bar {
+  display:flex; align-items:flex-end; gap:8px;
+  padding:10px 12px; padding-bottom:calc(10px + var(--safe-bottom));
+  border-top:1px solid var(--border); background:var(--bg); flex-shrink:0;
+}
+#msgInput {
+  flex:1; background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:9px 14px; color:var(--text); font-size:14px;
+  font-family:'DM Sans',sans-serif; resize:none; outline:none;
+  max-height:120px; line-height:1.4; min-height:38px;
+  -webkit-appearance:none;
+}
+#msgInput::placeholder { color:var(--muted); }
+#msgInput:focus { border-color:var(--accent); }
+.send-btn {
+  width:38px; height:38px; border-radius:50%; background:var(--accent);
+  border:none; color:#000; font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  transition:opacity .15s;
+}
+.send-btn:disabled { opacity:0.35; cursor:not-allowed; }
+.send-btn:not(:disabled):active { opacity:0.8; }
+
+/* SUGGESTIONS */
+.suggestions {
+  display:flex; gap:7px; padding:6px 12px 0;
+  overflow-x:auto; scrollbar-width:none; flex-shrink:0;
+}
+.suggestions::-webkit-scrollbar { display:none; }
+.suggestion {
+  white-space:nowrap; font-size:11px; font-family:'Space Mono',monospace;
+  padding:5px 11px; border:1px solid var(--border); border-radius:14px;
+  color:var(--muted2); background:var(--surface); cursor:pointer;
+  transition:all .15s; flex-shrink:0;
+}
+.suggestion:active { border-color:var(--accent); color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="wordmark"><em>recipe</em>chat</div>
+    <div class="header-right">
+      <button class="new-btn" id="newBtn" onclick="resetToUpload()">new recipe</button>
+    </div>
+  </div>
+
+  <!-- UPLOAD SCREEN -->
+  <div class="upload-screen" id="uploadScreen">
+    <div class="upload-icon">🍽️</div>
+    <div class="upload-title">LOAD YOUR RECIPE</div>
+    <div class="upload-sub">Export any recipe from MealBoard as a PDF, then load it here to start chatting.</div>
+
+    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+      <span>📄</span> Choose Recipe PDF
+    </button>
+    <input type="file" id="fileInput" accept="application/pdf" onchange="handleFile(event)">
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">ONE-TAP SETUP</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="shortcut-info">
+      <button class="shortcut-toggle" id="shortcutToggle" onclick="toggleShortcut()">
+        <span>📱 Set up iOS Shortcut for one tap</span>
+        <span class="arrow">▾</span>
+      </button>
+      <div class="shortcut-body" id="shortcutBody">
+        <p style="margin-bottom:10px;">Once set up, tap <strong style="color:var(--text)">Share → Recipe Chat</strong> directly from MealBoard — no steps in between.</p>
+        <div class="shortcut-step"><span class="shortcut-step-num">1</span><span>Open the <strong style="color:var(--text)">Shortcuts</strong> app and tap <strong style="color:var(--text)">+</strong> to create a new shortcut.</span></div>
+        <div class="shortcut-step"><span class="shortcut-step-num">2</span><span>Tap <strong style="color:var(--text)">Add Action</strong> → search <code>Receive</code> → add <strong style="color:var(--text)">Receive Input from Share Sheet</strong>. Set type to <strong style="color:var(--text)">PDFs</strong>.</span></div>
+        <div class="shortcut-step"><span class="shortcut-step-num">3</span><span>Add action: search <code>Encode</code> → add <strong style="color:var(--text)">Encode/Decode</strong>. Set to <strong style="color:var(--text)">Base64 Encode</strong>. Connect input to Shortcut Input.</span></div>
+        <div class="shortcut-step"><span class="shortcut-step-num">4</span><span>Add action: <strong style="color:var(--text)">Text</strong>. Type your site URL then <code>#</code> then insert the <em>Encoded Text</em> variable. Example: <code>https://yoursite.vercel.app/recipe#</code> + variable.</span></div>
+        <div class="shortcut-step"><span class="shortcut-step-num">5</span><span>Add action: <strong style="color:var(--text)">Open URLs</strong>. Connect it to the Text above.</span></div>
+        <div class="shortcut-step"><span class="shortcut-step-num">6</span><span>Tap the shortcut name, rename it <strong style="color:var(--text)">Recipe Chat</strong>. In settings (⋯), enable <strong style="color:var(--text)">Show in Share Sheet</strong>.</span></div>
+        <div class="note">Works best with PDFs under 1.5 MB. Larger files: use the "Choose PDF" button above instead.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING SCREEN -->
+  <div class="loading-screen" id="loadingScreen">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">reading your recipe...</div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div class="chat-screen" id="chatScreen">
+    <div class="recipe-bar">
+      <div class="recipe-icon">📄</div>
+      <div class="recipe-name" id="recipeNameBar">recipe loaded</div>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="suggestions" id="suggestions"></div>
+    <div class="input-bar">
+      <textarea id="msgInput" placeholder="Ask anything about this recipe…" rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>↑</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const FIRST_MESSAGE = 'Give me a brief overview of this recipe: what it is, approximate total time, and the main ingredients. Keep it short.';
+const SUGGESTIONS_INITIAL = [
+  'How long does this take?', 'Can I prep anything ahead?',
+  'What can I substitute for…', 'Scale it for 8 people',
+  'Any tips for beginners?', 'What equipment do I need?',
+];
+
+let pdfBase64 = null;
+let pdfName = '';
+let messages = []; // {role, content}
+let isLoading = false;
+
+// ─── INIT ───────────────────────────────────────────────────────────────────
+
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = location.hash.slice(1); // strip '#'
+  if (hash && hash.length > 100) {
+    pdfBase64 = hash;
+    pdfName = 'recipe from MealBoard';
+    history.replaceState(null, '', location.pathname); // clean up URL
+    startChat();
+  }
+});
+
+// ─── FILE PICKER ─────────────────────────────────────────────────────────────
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  pdfName = file.name.replace(/\.pdf$/i, '');
+  const reader = new FileReader();
+  reader.onload = () => {
+    pdfBase64 = reader.result.split(',')[1]; // strip data:application/pdf;base64,
+    startChat();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── CHAT INIT ────────────────────────────────────────────────────────────────
+
+async function startChat() {
+  show('loadingScreen');
+  setLoading(true, 'reading your recipe…');
+  messages = [{ role: 'user', content: FIRST_MESSAGE }];
+  const reply = await callClaude();
+  if (!reply) return; // error already shown
+  messages.push({ role: 'assistant', content: reply });
+  show('chatScreen');
+  document.getElementById('recipeNameBar').textContent = pdfName || 'recipe loaded';
+  document.getElementById('newBtn').classList.add('visible');
+  renderMessages();
+  renderSuggestions(SUGGESTIONS_INITIAL);
+  setLoading(false);
+  document.getElementById('msgInput').addEventListener('input', updateSendBtn);
+}
+
+// ─── SEND ─────────────────────────────────────────────────────────────────────
+
+async function sendMessage() {
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if (!text || isLoading) return;
+  input.value = '';
+  autoResize(input);
+  updateSendBtn();
+  clearSuggestions();
+  messages.push({ role: 'user', content: text });
+  renderMessages();
+  setLoading(true, null);
+  const reply = await callClaude();
+  if (!reply) return;
+  messages.push({ role: 'assistant', content: reply });
+  renderMessages();
+  setLoading(false);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function useSuggestion(text) {
+  document.getElementById('msgInput').value = text;
+  autoResize(document.getElementById('msgInput'));
+  updateSendBtn();
+  sendMessage();
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+
+async function callClaude() {
+  try {
+    const res = await fetch('/api/recipe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pdf: pdfBase64, messages }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data.response;
+  } catch (err) {
+    console.error(err);
+    appendErrorMsg(err.message);
+    setLoading(false);
+    return null;
+  }
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function renderMessages() {
+  const el = document.getElementById('messages');
+  el.innerHTML = messages.map((m, i) => {
+    if (i === 0) return ''; // hide the internal first prompt
+    return `<div class="msg ${m.role}">
+      <div class="bubble">${escHtml(m.content)}</div>
+    </div>`;
+  }).join('');
+  // typing indicator
+  if (isLoading) {
+    el.innerHTML += `<div class="msg assistant" id="typingIndicator">
+      <div class="bubble" style="color:var(--muted2);font-style:italic;font-size:12px">typing…</div>
+    </div>`;
+  }
+  el.scrollTop = el.scrollHeight;
+}
+
+function appendErrorMsg(msg) {
+  const el = document.getElementById('messages');
+  el.innerHTML += `<div class="msg assistant">
+    <div class="bubble" style="border-color:var(--accent3);color:var(--accent3)">Error: ${escHtml(msg)}</div>
+  </div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderSuggestions(list) {
+  const el = document.getElementById('suggestions');
+  el.innerHTML = list.map(s =>
+    `<div class="suggestion" onclick="useSuggestion(${JSON.stringify(s)})">${escHtml(s)}</div>`
+  ).join('');
+}
+
+function clearSuggestions() {
+  document.getElementById('suggestions').innerHTML = '';
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+
+function show(id) {
+  ['uploadScreen','loadingScreen','chatScreen'].forEach(s => {
+    const el = document.getElementById(s);
+    if (s === 'loadingScreen') {
+      el.classList.toggle('visible', s === id);
+    } else if (s === 'chatScreen') {
+      el.classList.toggle('visible', s === id);
+      el.style.display = s === id ? 'flex' : 'none';
+    } else {
+      el.style.display = s === id ? 'flex' : 'none';
+    }
+  });
+}
+
+function setLoading(on, text) {
+  isLoading = on;
+  document.getElementById('sendBtn').disabled = on;
+  if (on && text) {
+    document.getElementById('loadingText').textContent = text;
+  }
+  if (on && document.getElementById('chatScreen').classList.contains('visible')) {
+    // show typing indicator inline instead of loading screen
+    renderMessages();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function updateSendBtn() {
+  const val = document.getElementById('msgInput').value.trim();
+  document.getElementById('sendBtn').disabled = !val || isLoading;
+}
+
+function toggleShortcut() {
+  const body = document.getElementById('shortcutBody');
+  const btn = document.getElementById('shortcutToggle');
+  body.classList.toggle('visible');
+  btn.classList.toggle('open');
+}
+
+function resetToUpload() {
+  pdfBase64 = null;
+  pdfName = '';
+  messages = [];
+  isLoading = false;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('newBtn').classList.remove('visible');
+  clearSuggestions();
+  show('uploadScreen');
+}
+
+function escHtml(s) {
+  return s
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>
